@@ -6,16 +6,30 @@ import sys
 import cv2
 import numpy as np
 from datetime import datetime
-
+"""
+PipeLine:
+        readImage -> Blurring -> GrayScale -> ThresHolding -> Denoising -> 
+            Canny-Edge -> Find Contours -> Find Corners co-ordinates -> Crop  the contour ->
+                Sharping & Brightness correction
+                
+STEPS:
+    1. Read from terminal
+    2. Blurring - Gaussian Filter
+    3. image to Gray scale
+    4. ThresHolding - simple or adaptive Thresholding
+    5. Denoising - cv2.fastNlMeansDenoising
+    6. Canny Edge detection
+    7. Find Contours
+"""
 def mapp(h):
-    h = h.reshape((4,2))
-    hnew = np.zeros((4,2),dtype = np.float32)
+    h = h.reshape((4, 2))
+    hnew = np.zeros((4, 2), dtype=np.float32)
 
     add = h.sum(1)
     hnew[0] = h[np.argmin(add)]
     hnew[2] = h[np.argmax(add)]
 
-    diff = np.diff(h,axis = 1)
+    diff = np.diff(h, axis=1)
     hnew[1] = h[np.argmin(diff)]
     hnew[3] = h[np.argmax(diff)]
 
@@ -23,7 +37,7 @@ def mapp(h):
 
 def read_image(path):
     img = cv2.imread(path)
-    img=cv2.resize(img,(800,800))
+    img = cv2.resize(img, (800, 800))
     return img
 
 
@@ -45,33 +59,33 @@ gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
 
 
 
-blurred=cv2.GaussianBlur(gray,(5,5),0)  #(5,5) is the kernel size and 0 is sigma that determines the amount of blur
-cv2.imshow("Blur",blurred)
+blurred=cv2.GaussianBlur(gray, (5, 5), 0)  #(5,5) is the kernel size and 0 is sigma that determines the amount of blur
+cv2.imshow("Blur", blurred)
 
-edged=cv2.Canny(blurred,0,50)  #30 MinThreshold and 50 is the MaxThreshold
-cv2.imshow("Canny",edged)
+edged = cv2.Canny(blurred, 0, 50)  #30 MinThreshold and 50 is the MaxThreshold
+cv2.imshow("Canny", edged)
 
 
-contours,hierarchy=cv2.findContours(edged,cv2.RETR_LIST,cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
-contours=sorted(contours,key=cv2.contourArea,reverse=True)
+contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
+contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
 #the loop extracts the boundary contours of the page
 for c in contours:
-    p=cv2.arcLength(c,True)
-    approx=cv2.approxPolyDP(c,0.02*p,True)
+    p = cv2.arcLength(c, True)
+    approx = cv2.approxPolyDP(c, 0.02*p, True)
 
-    if len(approx)==4:
-        target=approx
+    if len(approx) == 4:
+        target = approx
         break
-approx=mapp(target) #find endpoints of the sheet
+approx = mapp(target) #find endpoints of the sheet
 
-pts=np.float32([[0,0],[800,0],[800,800],[0,800]])  #map to 800*800 target window
+pts = np.float32([[0, 0], [800, 0], [800, 800], [0, 800]])  #map to 800*800 target window
 
-op=cv2.getPerspectiveTransform(approx,pts)  #get the top or bird eye view effect
-dst=cv2.warpPerspective(orig,op,(800,800))
+op = cv2.getPerspectiveTransform(approx, pts)  #get the top or bird eye view effect
+dst = cv2.warpPerspective(orig, op, (800, 800))
 
 
-cv2.imshow("Scanned",dst)
+cv2.imshow("Scanned", dst)
 # press q or Esc to close
 cv2.waitKey(0)
 cv2.destroyAllWindows()
