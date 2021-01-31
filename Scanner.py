@@ -6,6 +6,7 @@ import sys
 import cv2
 import numpy as np
 from datetime import datetime
+size = 800
 """
 PipeLine:
         readImage -> Blurring -> GrayScale -> ThresHolding -> Denoising -> 
@@ -21,6 +22,7 @@ STEPS:
     6. Canny Edge detection
     7. Find Contours
 """
+
 def mapp(h):
     h = h.reshape((4, 2))
     hnew = np.zeros((4, 2), dtype=np.float32)
@@ -37,7 +39,8 @@ def mapp(h):
 
 def read_image(path):
     img = cv2.imread(path)
-    img = cv2.resize(img, (800, 800))
+    #size = img.shape[0]
+    img = cv2.resize(img, (size, size))
     return img
 
 
@@ -53,20 +56,21 @@ start_time = datetime.now()
 
 # read image in grayScale
 image = read_image(path_img)
-#image = cv2.resize(image, (1500, 880))
 orig = image.copy()
-gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 
-blurred=cv2.GaussianBlur(gray, (5, 5), 0)  #(5,5) is the kernel size and 0 is sigma that determines the amount of blur
+blurred=cv2.GaussianBlur(gray, (5, 5), 2)  #(5,5) is the kernel size and 0 is sigma that determines the amount of blur
+threshold = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+threshold = cv2.fastNlMeansDenoising(threshold, 11, 31, 9)
 cv2.imshow("Blur", blurred)
 
-edged = cv2.Canny(blurred, 0, 50)  #30 MinThreshold and 50 is the MaxThreshold
+edged = cv2.Canny(threshold, 50, 150, apertureSize=7)  #30 MinThreshold and 50 is the MaxThreshold
 cv2.imshow("Canny", edged)
 
 
-contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
+contours, hierarchy = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
 #the loop extracts the boundary contours of the page
@@ -79,18 +83,19 @@ for c in contours:
         break
 approx = mapp(target) #find endpoints of the sheet
 
-pts = np.float32([[0, 0], [800, 0], [800, 800], [0, 800]])  #map to 800*800 target window
+pts = np.float32([[0, 0], [size, 0], [size, size], [0, size]])  #map to 800*800 target window
 
 op = cv2.getPerspectiveTransform(approx, pts)  #get the top or bird eye view effect
-dst = cv2.warpPerspective(orig, op, (800, 800))
+dst = cv2.warpPerspective(orig, op, (size, size))
 
 
+
+#ret1,dst = cv2.threshold(dst,137,255,cv2.THRESH_BINARY)
+cv2.imwrite(path_output, dst)
 cv2.imshow("Scanned", dst)
 # press q or Esc to close
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-cv2.imwrite(path_output, dst)
-
 # total run time
 end_time = datetime.now()
 total_time = datetime.now()
