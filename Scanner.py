@@ -95,11 +95,11 @@ cv2.imshow("Scanned", dst)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
 
-# total run time
-end_time = datetime.now()
-total_time = datetime.now()
-total_time = end_time - start_time
-end_time = end_time.strftime("%H:%M:%S")
-total_time = str(total_time)
-print("End time: " + end_time)
-print("Total time: " + total_time)
+# # total run time
+# end_time = datetime.now()
+# total_time = datetime.now()
+# total_time = end_time - start_time
+# end_time = end_time.strftime("%H:%M:%S")
+# total_time = str(total_time)
+# print("End time: " + end_time)
+# print("Total time: " + total_time)
