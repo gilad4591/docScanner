@@ -39,7 +39,6 @@ def mapp(h):
 
 def read_image(path):
     img = cv2.imread(path)
-    #size = img.shape[0]
     img = cv2.resize(img, (size, size))
     return img
 
@@ -48,11 +47,11 @@ def read_image(path):
 path_img = sys.argv[1]
 path_output = sys.argv[2]
 
-# check runtime from the beginning
-start_time = datetime.now()
-start_time = start_time.strftime("%H:%M:%S")
-print("Start Time: " + start_time)
-start_time = datetime.now()
+# # check runtime from the beginning
+# start_time = datetime.now()
+# start_time = start_time.strftime("%H:%M:%S")
+# print("Start Time: " + start_time)
+# start_time = datetime.now()
 
 # read image in grayScale
 image = read_image(path_img)
@@ -61,19 +60,19 @@ gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 
 
-blurred=cv2.GaussianBlur(gray, (5, 5), 2)  #(5,5) is the kernel size and 0 is sigma that determines the amount of blur
+blurred=cv2.GaussianBlur(gray, (5, 5), 1)
 threshold = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 threshold = cv2.fastNlMeansDenoising(threshold, 11, 31, 9)
 cv2.imshow("Blur", blurred)
 
-edged = cv2.Canny(threshold, 50, 150, apertureSize=7)  #30 MinThreshold and 50 is the MaxThreshold
+edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  #30 MinThreshold and 50 is the MaxThreshold
 cv2.imshow("Canny", edged)
 
 
 contours, hierarchy = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
-#the loop extracts the boundary contours of the page
+#Extracts contours of the page
 for c in contours:
     p = cv2.arcLength(c, True)
     approx = cv2.approxPolyDP(c, 0.02*p, True)
@@ -81,21 +80,21 @@ for c in contours:
     if len(approx) == 4:
         target = approx
         break
-approx = mapp(target) #find endpoints of the sheet
+approx = mapp(target) #find endpoints
 
-pts = np.float32([[0, 0], [size, 0], [size, size], [0, size]])  #map to 800*800 target window
+pts = np.float32([[0, 0], [size, 0], [size, size], [0, size]])
 
-op = cv2.getPerspectiveTransform(approx, pts)  #get the top or bird eye view effect
+op = cv2.getPerspectiveTransform(approx, pts)  #bird eye view effect
 dst = cv2.warpPerspective(orig, op, (size, size))
 
 
 
-#ret1,dst = cv2.threshold(dst,137,255,cv2.THRESH_BINARY)
+#ret1,dst = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
 cv2.imwrite(path_output, dst)
 cv2.imshow("Scanned", dst)
-# press q or Esc to close
 cv2.waitKey(0)
 cv2.destroyAllWindows()
+
 # total run time
 end_time = datetime.now()
 total_time = datetime.now()
