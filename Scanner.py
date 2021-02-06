@@ -4,9 +4,8 @@
 
 import sys
 import cv2
+import imutils
 import numpy as np
-from datetime import datetime
-size = 800
 """
 PipeLine:
         readImage -> Blurring -> GrayScale -> ThresHolding -> Denoising -> 
@@ -23,7 +22,7 @@ STEPS:
     7. Find Contours
 """
 
-def mapp(h):
+def orderPoints(h):
     h = h.reshape((4, 2))
     hnew = np.zeros((4, 2), dtype=np.float32)
 
@@ -39,7 +38,7 @@ def mapp(h):
 
 def read_image(path):
     img = cv2.imread(path)
-    img = cv2.resize(img, (size, size))
+    #img = cv2.resize(img, (size, size))
     return img
 
 
@@ -47,29 +46,20 @@ def read_image(path):
 path_img = sys.argv[1]
 path_output = sys.argv[2]
 
-# # check runtime from the beginning
-# start_time = datetime.now()
-# start_time = start_time.strftime("%H:%M:%S")
-# print("Start Time: " + start_time)
-# start_time = datetime.now()
-
 # read image in grayScale
 image = read_image(path_img)
-orig = image.copy()
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+orig = imutils.resize(image, height=1000)
+gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
 
 
-
-blurred=cv2.GaussianBlur(gray, (7, 7), 2)
+blurred=cv2.GaussianBlur(gray, (5, 5), 2)
 threshold = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 threshold = cv2.fastNlMeansDenoising(threshold, 11, 31, 9)
-cv2.imshow("Blur", blurred)
 
-edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  #30 MinThreshold and 50 is the MaxThreshold
-cv2.imshow("Canny", edged)
+edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  #30 = MinThreshold, 70 = MaxThreshold
 
 
-contours, hierarchy = cv2.findContours(edged, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
+contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
 
 #Extracts contours of the page
@@ -80,26 +70,17 @@ for c in contours:
     if len(approx) == 4:
         target = approx
         break
-approx = mapp(target) #find endpoints
+approx = orderPoints(target) #find endpoints
 
-pts = np.float32([[0, 0], [size, 0], [size, size], [0, size]])
+pts = np.float32([[0, 0], [image.shape[1], 0], [image.shape[1], image.shape[0]], [0, image.shape[0]]])
 
 op = cv2.getPerspectiveTransform(approx, pts)  #bird eye view effect
-dst = cv2.warpPerspective(orig, op, (size, size))
+dst = cv2.warpPerspective(gray, op, (image.shape[1], image.shape[0]))
 
 
-
-#ret1,dst = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
+#dst = cv2.adaptiveThreshold(dst, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+ret1,dst = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
 cv2.imwrite(path_output, dst)
-cv2.imshow("Scanned", dst)
+#cv2.imshow("Scanned", dst)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-# # total run time
-# end_time = datetime.now()
-# total_time = datetime.now()
-# total_time = end_time - start_time
-# end_time = end_time.strftime("%H:%M:%S")
-# total_time = str(total_time)
-# print("End time: " + end_time)
-# print("Total time: " + total_time)
