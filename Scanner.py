@@ -12,15 +12,6 @@ PipeLine:
         readImage -> GrayScale -> Blurring  -> ThresHolding -> Denoising -> 
             Canny-Edge -> Find Contours -> Find Corners co-ordinates -> Crop the contour ->
                 Sharping & Brightness correction (Binary threshold)
-                
-STEPS:
-    1. Read from terminal
-    2. Image to Gray scale
-    3. Blurring - Gaussian Filter
-    4. Thresholding - simple or adaptive Thresholding
-    5. Denoising - cv2.fastNlMeansDenoising
-    6. Canny Edge detection
-    7. Find Contours
 """
 
 
