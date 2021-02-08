@@ -6,22 +6,25 @@ import sys
 import cv2
 import imutils
 import numpy as np
+
 """
 PipeLine:
-        readImage -> Blurring -> GrayScale -> ThresHolding -> Denoising -> 
-            Canny-Edge -> Find Contours -> Find Corners co-ordinates -> Crop  the contour ->
-                Sharping & Brightness correction
+        readImage -> GrayScale -> Blurring  -> ThresHolding -> Denoising -> 
+            Canny-Edge -> Find Contours -> Find Corners co-ordinates -> Crop the contour ->
+                Sharping & Brightness correction (Binary threshold)
                 
 STEPS:
     1. Read from terminal
-    2. Blurring - Gaussian Filter
-    3. image to Gray scale
-    4. ThresHolding - simple or adaptive Thresholding
+    2. Image to Gray scale
+    3. Blurring - Gaussian Filter
+    4. Thresholding - simple or adaptive Thresholding
     5. Denoising - cv2.fastNlMeansDenoising
     6. Canny Edge detection
     7. Find Contours
 """
 
+
+#reshape the image
 def orderPoints(h):
     h = h.reshape((4, 2))
     hnew = np.zeros((4, 2), dtype=np.float32)
@@ -36,51 +39,57 @@ def orderPoints(h):
 
     return hnew
 
+
 def read_image(path):
     img = cv2.imread(path)
-    #img = cv2.resize(img, (size, size))
+    print("Image loaded")
     return img
 
 
-# for terminal execute
+# For terminal execute
 path_img = sys.argv[1]
 path_output = sys.argv[2]
 
-# read image in grayScale
+# Read image in grayScale
 image = read_image(path_img)
 orig = imutils.resize(image, height=1000)
+print("Work on a ratio of 1/1000")
 gray = cv2.cvtColor(orig, cv2.COLOR_BGR2GRAY)
+print("Change image to grayscale")
 
-
-blurred=cv2.GaussianBlur(gray, (5, 5), 2)
+# Blur image,remove noise and get canny edges
+blurred = cv2.GaussianBlur(gray, (5, 5), 2)
 threshold = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
 threshold = cv2.fastNlMeansDenoising(threshold, 11, 31, 9)
-
-edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  #30 = MinThreshold, 70 = MaxThreshold
-
-
-contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)  #retrieve the contours as a list, with simple apprximation model
+edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  # 30 = MinThreshold, 70 = MaxThreshold
+print("Get canny edges of image")
+# Extract contours of image
+contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST,
+                                       cv2.CHAIN_APPROX_SIMPLE)  # retrieve the contours as a list, with simple apprximation model
 contours = sorted(contours, key=cv2.contourArea, reverse=True)
-
-#Extracts contours of the page
+print("Contour extracted")
+# Extracts largest contours
 for c in contours:
     p = cv2.arcLength(c, True)
-    approx = cv2.approxPolyDP(c, 0.02*p, True)
-
+    approx = cv2.approxPolyDP(c, 0.02 * p, True)
+    # Extracts 4 points edges
     if len(approx) == 4:
         target = approx
         break
-approx = orderPoints(target) #find endpoints
 
+# find endpoints
+approx = orderPoints(target)
+print("Endpoints found")
 pts = np.float32([[0, 0], [image.shape[1], 0], [image.shape[1], image.shape[0]], [0, image.shape[0]]])
-
-op = cv2.getPerspectiveTransform(approx, pts)  #bird eye view effect
+# bird eye view effect
+op = cv2.getPerspectiveTransform(approx, pts)
 dst = cv2.warpPerspective(gray, op, (image.shape[1], image.shape[0]))
-
-
-#dst = cv2.adaptiveThreshold(dst, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-ret1,dst = cv2.threshold(dst,127,255,cv2.THRESH_BINARY)
+print("Image cropped and changed to 'bird eye view effect'")
+# Choose between adaptive threshold and binary.
+# dst = cv2.adaptiveThreshold(dst, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
+ret1, dst = cv2.threshold(dst, 127, 255, cv2.THRESH_BINARY)
+print("Scan effect on image")
+#Save image to disk
 cv2.imwrite(path_output, dst)
-#cv2.imshow("Scanned", dst)
-cv2.waitKey(0)
-cv2.destroyAllWindows()
+print("Finished succesfully")
+
