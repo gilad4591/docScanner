@@ -9,7 +9,7 @@ import numpy as np
 
 """
 PipeLine:
-        readImage -> GrayScale -> Blurring  -> ThresHolding -> Denoising -> 
+        readImage -> GrayScale -> Blurring  -> 
             Canny-Edge -> Find Contours -> Find Corners co-ordinates -> Crop the contour ->
                 Sharping & Brightness correction (Binary threshold)
 """
@@ -50,9 +50,7 @@ print("Change image to grayscale")
 
 # Blur image,remove noise and get canny edges
 blurred = cv2.GaussianBlur(gray, (5, 5), 2)
-threshold = cv2.adaptiveThreshold(blurred, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 11, 2)
-threshold = cv2.fastNlMeansDenoising(threshold, 11, 31, 9)
-edged = cv2.Canny(threshold, 30, 70, apertureSize=7)  # 30 = MinThreshold, 70 = MaxThreshold
+edged = cv2.Canny(blurred, 30, 70, apertureSize=7)  # 30 = MinThreshold, 70 = MaxThreshold
 print("Get canny edges of image")
 # Extract contours of image
 contours, hierarchy = cv2.findContours(edged, cv2.RETR_LIST,
