@@ -26,7 +26,7 @@ Pipeline:
 ## Output:
 scanned image on the same folder of scan.py named -> output_image.jpg
 
-##Results:
+## Results:
 <em>before: <p></p>
 <img src="https://github.com/gilad4591/docScanner/blob/master/1/page.jpg" width="250" height="250"/>
 
