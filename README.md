@@ -26,3 +26,6 @@ Pipeline:
 * Save output
 ## Output:
 scanned image on the same folder of scan.py named -> output_image.jpg
+
+##Results:
+![alt text](https://github.com/gilad4591/docScanner/blob/master/output.jpg)
