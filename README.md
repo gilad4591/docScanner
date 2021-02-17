@@ -11,7 +11,7 @@ Development Environment:
 * imutils
 * numpy
 ## How to run:
-Run this command on the Terminal - python Scanner.py path_input_image.jpg path_output_image.jpg
+Run this command on the Terminal - <b>python Scanner.py path_input_image.jpg path_output_image.jpg</b> <p></p>
 Pipeline:
 * Read image
 * Gray scale
