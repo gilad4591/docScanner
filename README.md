@@ -17,8 +17,6 @@ Pipeline:
 * Read image
 * Gray scale
 * Gaussian blur
-* Adaptive threshold
-* Denoising
 * Canny
 * Find contours
 * Find corners
