@@ -28,4 +28,4 @@ Pipeline:
 scanned image on the same folder of scan.py named -> output_image.jpg
 
 ##Results:
-![alt text](https://github.com/gilad4591/docScanner/blob/master/output.jpg =250x250)
+<img src="https://github.com/gilad4591/docScanner/blob/master/output.jpg", width="250", height="250"/>
