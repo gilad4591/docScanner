@@ -12,7 +12,7 @@ Development Environment:
 * numpy
 ## How to run:
 Run this command on the Terminal - <b>python Scanner.py path_input_image.jpg path_output_image.jpg</b> <p></p>
-Pipeline:
+## Pipeline:
 * Read image
 * Gray scale
 * Gaussian blur
